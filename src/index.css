@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/* I&A brand guide 2022, Fashions variant: Ochre, Light Pink, Sage, White.
+   Headings: Cormorant Garamond Bold, sentence case. Body and labels: Agrandir (Lexend stands in; swap --font-sans only).
+   Pink is a surface and highlight colour, never text. Corners near-square. */
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Lexend", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #45353a;        /* Ochre */
+  --color-ink-soft: #5e4b51;
+  --color-mute: #6b5a60;       /* secondary text, AA on paper, sage and pink */
+  --color-paper: #fbfbf9;      /* warm white ground */
+  --color-pink: #ffcad4;       /* Light Pink, the Fashions colour */
+  --color-pink-deep: #f7b3c0;
+  --color-sage: #d8e2dc;
+  --color-stone: #e9e4e5;
+  --color-line: #e9e4e5;
+  --radius-pill: 3px;
+}
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+
+body { @apply bg-paper text-ink font-sans antialiased; font-size: 16px; font-weight: 300; line-height: 1.55; }
+strong, b { font-weight: 500; }
+h1, h2, .display { font-family: var(--font-serif); font-weight: 700; letter-spacing: -0.005em; line-height: 1.04; text-wrap: balance; }
+h3 { font-weight: 400; text-wrap: balance; }
+
+.label { text-transform: uppercase; letter-spacing: 0.15em; font-weight: 400; font-size: 0.75rem; }
+.wrap { @apply mx-auto w-full max-w-[1320px] px-4 sm:px-8; }
+
+.btn { @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-pill px-6 text-[0.8125rem] font-normal uppercase tracking-[0.12em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink; }
+.btn-ink { @apply bg-ink text-paper hover:bg-ink-soft; }
+.btn-pink { @apply bg-pink text-ink hover:bg-pink-deep; }
+.btn-ghost { @apply border border-ink bg-transparent text-ink hover:bg-ink hover:text-paper; }
+.chip { @apply inline-flex min-h-11 items-center rounded-pill border border-ink px-4 text-sm whitespace-nowrap transition-colors; }
+.chip[aria-pressed="true"], .chip[aria-current="page"] { @apply bg-ink text-paper; }
+
+.lift img { transition: transform 700ms cubic-bezier(.2,.8,.2,1); }
+.lift:hover img { transform: scale(1.02); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--color-ink); outline-offset: 2px; }
