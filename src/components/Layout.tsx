@@ -25,7 +25,7 @@ export function Header() {
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-pill focus:bg-paper focus:px-4 focus:py-3">Skip to content</a>
         <div className="wrap flex h-[34px] items-center justify-between gap-3 text-[13px]">
           <p className="truncate">
-            <span className="sm:hidden">Free delivery over {gbp(SITE.delivery.freeOver)} · alterations in store</span>
+            <span className="sm:hidden">Free delivery from {gbp(SITE.delivery.freeOver)} · altered in store</span>
             <span className="hidden sm:inline">Free delivery on orders of {gbp(SITE.delivery.freeOver)} and over · every abaya can be altered in our Tooting shop</span>
           </p>
           {SITE.preview && <span className="label shrink-0 rounded-pill border border-on-ink px-1.5 py-0.5 text-[10px] leading-none text-paper" title="Concept preview: products are samples and online ordering opens at launch">Preview</span>}

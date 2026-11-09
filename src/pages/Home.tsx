@@ -104,7 +104,7 @@ export function Home() {
           </div>
         </Link>
         <Link to="/shop/co-ords" className="lift group flex flex-col overflow-hidden rounded-pill bg-sage">
-          <div className="overflow-hidden"><img src={img("looks/sage-linen", true)} alt="" loading="lazy" width="560" height="695" className="aspect-[4/3] w-full object-cover object-[50%_35%] md:aspect-[5/4]" /></div>
+          <div className="relative overflow-hidden md:flex-1"><img src={img("looks/sage-linen", true)} alt="" loading="lazy" width="560" height="695" className="aspect-[4/3] w-full object-cover object-[50%_35%] md:absolute md:inset-0 md:aspect-auto md:h-full" /></div>
           <div className="flex flex-col gap-1 p-5">
             <span className="display text-[30px] group-hover:underline">Co-ords</span>
             <span className="text-mute">Matching sets in cotton, jersey and polyester</span>

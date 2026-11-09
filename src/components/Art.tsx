@@ -123,10 +123,10 @@ export function AlterationsFigure({ className = "" }: { className?: string }) {
       <path d="M272 202 L244 213" stroke={ink} fill="none" {...S} strokeDasharray="6 5" />
       {/* sides taken in */}
       <path d="M204 150 L224 380" stroke={ink} fill="none" {...S} strokeDasharray="6 5" />
-      <g fill={ink} fontFamily="Lexend, sans-serif" fontSize="15">
-        <path d="M296 206 L330 206" stroke={ink} {...S} /><text x="338" y="211">Sleeves</text><text x="338" y="230">shortened</text>
-        <path d="M226 300 L330 300" stroke={ink} {...S} /><text x="338" y="305">Sides</text><text x="338" y="324">taken in</text>
-        <path d="M262 424 L330 424" stroke={ink} {...S} /><text x="338" y="429">Hem</text><text x="338" y="448">taken up</text>
+      <g fill={ink} fontFamily="Lexend, sans-serif" fontSize="19">
+        <path d="M296 206 L330 206" stroke={ink} {...S} /><text x="338" y="211">Sleeves</text><text x="338" y="234">shortened</text>
+        <path d="M226 300 L330 300" stroke={ink} {...S} /><text x="338" y="305">Sides</text><text x="338" y="328">taken in</text>
+        <path d="M262 424 L330 424" stroke={ink} {...S} /><text x="338" y="429">Hem</text><text x="338" y="452">taken up</text>
       </g>
     </svg>
   );

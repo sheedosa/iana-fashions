@@ -145,7 +145,7 @@ export function DeliveryReturns() {
       <section className="wrap flex max-w-3xl flex-col gap-10 py-10 sm:py-14" style={{ marginInline: "auto" }}>
         <div className="flex flex-col gap-4">
           <h1>Delivery and returns</h1>
-          <p className="text-[17px] text-mute">Delivery is free on orders over {gbp(d.freeOver)}, or collect from the shop in Tooting.</p>
+          <p className="text-[17px] text-mute">Delivery is free on orders of {gbp(d.freeOver)} and over, or collect from the shop in Tooting.</p>
         </div>
         <div className="flex flex-col gap-3">
           <h2>Delivery</h2>
