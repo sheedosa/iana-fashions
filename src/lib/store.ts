@@ -23,15 +23,30 @@ export type Product = {
 };
 export type Collection = { handle: string; title: string; blurb: string };
 
+const WALL_ORDER = ["White", "Cream", "Stone", "Camel", "Rust", "Blush", "Dusty pink", "Lilac", "Plum", "Mocha", "Olive", "Sage", "Teal", "Navy", "Charcoal", "Black"];
+
 const data = catalogue as unknown as { collections: Collection[]; products: Product[] };
 
 export const store = {
   collections: (): Collection[] => data.collections,
   collection: (handle: string) => data.collections.find((c) => c.handle === handle),
-  products: (f: { collection?: string; fabric?: string[] } = {}): Product[] =>
+  products: (f: { collection?: string; fabric?: string[]; colour?: string | null } = {}): Product[] =>
     data.products.filter((p) =>
       (!f.collection || f.collection === "all" || p.collections.includes(f.collection)) &&
-      (!f.fabric?.length || f.fabric.includes(p.fabric))),
+      (!f.fabric?.length || f.fabric.includes(p.fabric)) &&
+      (!f.colour || p.colours.some((c) => c.name === f.colour))),
+  /** Every colour in a set of products, once each, in the order of the colour wall (light to dark through the warm tones). */
+  colours: (list: Product[]): Colour[] => {
+    const seen = new Map<string, Colour>();
+    list.forEach((p) => p.colours.forEach((c) => { if (!seen.has(c.name)) seen.set(c.name, c); }));
+    const rank = (c: Colour) => { const i = WALL_ORDER.indexOf(c.name); return i < 0 ? WALL_ORDER.length : i; };
+    return [...seen.values()].sort((a, b) => rank(a) - rank(b));
+  },
+  /** The colour wall: every hijab colour with the styles that come in it. */
+  hijabWall: (): { colour: Colour; styles: Product[] }[] => {
+    const hijabs = data.products.filter((p) => !!p.art);
+    return store.colours(hijabs).map((colour) => ({ colour, styles: hijabs.filter((p) => p.colours.some((c) => c.name === colour.name)) }));
+  },
   product: (handle: string) => data.products.find((p) => p.handle === handle),
   pairs: (p: Product): Product[] => p.pairsWith.map((h) => data.products.find((x) => x.handle === h)).filter((x): x is Product => !!x),
   isPreorder: (p: Product) => p.badge === "Pre-order",

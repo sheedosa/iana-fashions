@@ -1,9 +1,9 @@
-import { useId } from "react";
+import { useEffect, useId, useRef, type CSSProperties } from "react";
 import type { Colour, HijabArt as Art } from "../lib/store";
 
 // Drawn imagery: flat fills from the palette, 1.5px strokes, no gradients.
 
-function mix(hex: string, to: string, t: number) {
+export function mix(hex: string, to: string, t: number) {
   const a = hex.replace("#", ""), b = to.replace("#", "");
   const c = [0, 2, 4].map((i) => Math.round(parseInt(a.slice(i, i + 2), 16) * (1 - t) + parseInt(b.slice(i, i + 2), 16) * t));
   return `#${c.map((v) => v.toString(16).padStart(2, "0")).join("")}`;
@@ -13,7 +13,7 @@ const light = (hex: string, t = 0.28) => mix(hex, "#ffffff", t);
 const S = { vectorEffect: "non-scaling-stroke" as const, strokeWidth: 1.5, strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
 
 /** A hijab style drawn folded in the chosen colour, until photography arrives. */
-export function HijabArt({ art, colour, ground = "#d8e2dc", className = "" }: { art: Art; colour: Colour; ground?: string; className?: string }) {
+export function HijabArt({ art, colour, ground = "#d8e2dc", className = "", style }: { art: Art; colour: Colour; ground?: string; className?: string; style?: CSSProperties }) {
   const id = useId().replace(/:/g, "");
   const c = colour.hex, d = dark(c), l = light(c);
   const isLight = parseInt(c.slice(1, 3), 16) > 200;
@@ -32,7 +32,7 @@ export function HijabArt({ art, colour, ground = "#d8e2dc", className = "" }: { 
   const face = art.texture === "sheer" ? mix(c, ground, 0.18) : c;
 
   return (
-    <svg viewBox="0 0 400 500" className={className} role="img" aria-label={`Drawing of the hijab, in ${colour.name.toLowerCase()}`} preserveAspectRatio="xMidYMid slice">
+    <svg viewBox="0 0 400 500" className={`art ${className}`} style={style} role="img" aria-label={`Drawing of the hijab, in ${colour.name.toLowerCase()}`} preserveAspectRatio="xMidYMid slice">
       <rect width="400" height="500" fill={ground} />
       {art.shape !== "instant" && <><rect y="336" width="400" height="164" fill={shelf} /><path d="M0 336 H400" stroke={mix(ground, "#45353a", 0.25)} {...S} /></>}
       {art.shape === "long" && (
@@ -72,26 +72,73 @@ export function HijabArt({ art, colour, ground = "#d8e2dc", className = "" }: { 
   );
 }
 
-/** Colour chips. Interactive when onPick is given. */
-export function Swatches({ colours, active, onPick, size = "sm", label }: { colours: Colour[]; active?: string; onPick?: (c: Colour) => void; size?: "sm" | "lg"; label: string }) {
+/** One colour as a folded piece of cloth: the fold on the left, a stitched hem on the right, the layer beneath showing. */
+export function FoldedChip({ colour }: { colour: Colour }) {
+  const c = colour.hex, d = dark(c, 0.24);
+  const isLight = parseInt(c.slice(1, 3), 16) > 200;
+  const line = isLight ? dark(c, 0.3) : light(c, 0.24);
+  return (
+    <svg viewBox="0 0 48 38" aria-hidden="true">
+      <path d="M6 27 H43 a2 2 0 0 1 2 2 V34 a2 2 0 0 1 -2 2 H8 C5 36 3 34 3 31.5 C3 29 4 27 6 27 Z" fill={d} stroke={d} {...S} strokeWidth={1} />
+      <path d="M8 3 H43 a2 2 0 0 1 2 2 V28 a2 2 0 0 1 -2 2 H8 C4.5 30 3 24 3 16.5 C3 9 4.5 3 8 3 Z" fill={c} stroke={d} {...S} strokeWidth={1} />
+      <path d="M9 5.5 C6.6 8.5 6.4 24 9 27.5" fill="none" stroke={line} {...S} strokeWidth={1} />
+      <path d="M40.5 7 V26" fill="none" stroke={line} {...S} strokeWidth={1} strokeDasharray="2 2.5" />
+    </svg>
+  );
+}
+
+/** Colour picks, as folded chips. `sm` is a quiet read-only row for cards. */
+export function Swatches({ colours, active, onPick, size = "md", label, className = "" }: { colours: Colour[]; active?: string | null; onPick?: (c: Colour) => void; size?: "sm" | "md" | "lg"; label: string; className?: string }) {
   if (!onPick) {
     return (
-      <ul className="flex flex-wrap items-center gap-1.5" aria-label={label}>
-        {colours.map((c) => <li key={c.name}><span className="swatch block h-4 w-4" style={{ background: c.hex }} title={c.name} /><span className="sr-only">{c.name}</span></li>)}
+      <ul className={`flex flex-wrap items-center gap-1 ${className}`} aria-label={label}>
+        {colours.map((c) => <li key={c.name}><span className="mini" style={{ background: c.hex }} title={c.name} /><span className="sr-only">{c.name}</span></li>)}
       </ul>
     );
   }
-  const box = size === "lg" ? "h-11 w-11" : "h-11 w-11";
-  const chip = size === "lg" ? "h-8 w-8" : "h-6 w-6";
   return (
-    <div className="flex flex-wrap" role="group" aria-label={label}>
+    <div className={`${className || (size === "lg" ? "chips chips-lg" : "chips")}`} role="group" aria-label={label}>
       {colours.map((c) => (
-        <button key={c.name} type="button" aria-pressed={active === c.name} aria-label={c.name} title={c.name} onClick={() => onPick(c)}
-          className={`inline-flex ${box} items-center justify-center rounded-pill border ${active === c.name ? "border-ink" : "border-transparent hover:border-line"}`}>
-          <span className={`swatch ${chip}`} style={{ background: c.hex }} />
+        <button key={c.name} type="button" className="fchip" aria-pressed={active === c.name} aria-label={c.name} title={c.name} onClick={() => onPick(c)}>
+          <FoldedChip colour={c} />
         </button>
       ))}
     </div>
+  );
+}
+
+/** The large hijab on the home page: one length of cloth hung over a rail, drawn in the chosen colour.
+    The fills ease to the new colour and the cloth settles when the colour changes. */
+export function Drape({ colour, className = "" }: { colour: Colour; className?: string }) {
+  const ref = useRef<SVGSVGElement>(null);
+  const first = useRef(true);
+  const c = colour.hex, d = dark(c, 0.16), dd = dark(c, 0.32);
+  const isLight = parseInt(c.slice(1, 3), 16) > 200;
+  const line = isLight ? dark(c, 0.3) : light(c, 0.26);
+  const ink = "#45353a";
+
+  useEffect(() => {
+    if (first.current) { first.current = false; return; }
+    const el = ref.current;
+    if (!el?.animate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    el.animate([{ transform: "scaleY(0.975) skewX(-0.6deg)" }, { transform: "none" }], { duration: 760, easing: "cubic-bezier(.16,1,.3,1)" });
+  }, [c]);
+
+  return (
+    <svg ref={ref} viewBox="0 0 400 520" className={`drape drape-in ${className}`} role="img" aria-label={`Drawing of a hijab hung over a rail, in ${colour.name.toLowerCase()}`}>
+      <path d="M58 20 V50 M342 20 V50" fill="none" stroke={ink} {...S} />
+      <path d="M22 54 H378" fill="none" stroke={ink} strokeWidth="6" strokeLinecap="round" />
+      {/* the shorter fall, behind */}
+      <path d="M236 52 L316 50 C326 150 346 246 362 340 C346 350 334 338 318 346 C306 352 298 347 288 350 Z" fill={dd} stroke={dd} {...S} />
+      <path d="M300 62 C310 160 324 250 340 340" fill="none" stroke={d} {...S} strokeWidth={1} />
+      {/* the long fall, in front: gathered at the rail, opening towards the hem */}
+      <path d="M100 58 C100 40 280 40 280 58 C288 190 306 330 330 462 C304 480 282 460 256 476 C230 492 204 464 176 480 C148 496 116 474 62 482 C84 340 98 190 100 58 Z" fill={c} stroke={d} {...S} />
+      <path d="M146 46 C142 200 122 370 108 481 C126 487 146 490 164 484 C166 370 160 200 158 45 Z" fill={d} />
+      <path d="M214 44 C220 200 236 360 250 478 C264 470 280 468 294 470 C276 350 240 200 226 44 Z" fill={d} />
+      <path d="M120 60 C116 200 98 350 86 478 M188 46 C190 210 200 366 208 476 M262 52 C272 200 300 350 318 466" fill="none" stroke={line} {...S} strokeWidth={1} />
+      <path d="M100 58 C100 40 280 40 280 58" fill="none" stroke={d} {...S} />
+      <path d="M70 467 C130 481 262 474 324 449" fill="none" stroke={line} {...S} strokeDasharray="3 4" />
+    </svg>
   );
 }
 
@@ -101,7 +148,7 @@ export function PhotoSlot({ caption, className = "" }: { caption: string; classN
     <div className={`flex flex-col justify-between bg-ink p-5 text-paper sm:p-6 ${className}`} role="img" aria-label={`Photo to come: ${caption}`}>
       <svg viewBox="0 0 64 40" className="h-8 w-12 self-end text-on-ink" aria-hidden="true" fill="none" stroke="currentColor" {...S}><path d="M32 8a4 4 0 1 1 4 4c-2 0-4 1-4 3v3L4 34h56L32 18" /></svg>
       <div className="flex flex-col gap-2" aria-hidden="true">
-        <span className="label text-paper">Photo to come</span>
+        <span className="voice text-paper">Photo to come</span>
         <span className="text-base text-on-ink">{caption}</span>
       </div>
     </div>
@@ -123,7 +170,7 @@ export function AlterationsFigure({ className = "" }: { className?: string }) {
       <path d="M272 202 L244 213" stroke={ink} fill="none" {...S} strokeDasharray="6 5" />
       {/* sides taken in */}
       <path d="M204 150 L224 380" stroke={ink} fill="none" {...S} strokeDasharray="6 5" />
-      <g fill={ink} fontFamily="Lexend, sans-serif" fontSize="19">
+      <g fill={ink} fontFamily="Instrument Sans, sans-serif" fontSize="19">
         <path d="M296 206 L330 206" stroke={ink} {...S} /><text x="338" y="211">Sleeves</text><text x="338" y="234">shortened</text>
         <path d="M226 300 L330 300" stroke={ink} {...S} /><text x="338" y="305">Sides</text><text x="338" y="328">taken in</text>
         <path d="M262 424 L330 424" stroke={ink} {...S} /><text x="338" y="429">Hem</text><text x="338" y="452">taken up</text>
@@ -148,7 +195,7 @@ export function ShopMap({ className = "" }: { className?: string }) {
       <path d="M144 180 H156" stroke={ink} {...S} />
       <path d="M380 210 C380 190 404 190 404 210 C404 224 392 236 392 236 C392 236 380 224 380 210 Z" fill={ink} />
       <circle cx="392" cy="208" r="4" fill="#ffcad4" />
-      <g fill={ink} fontFamily="Lexend, sans-serif" fontSize="20">
+      <g fill={ink} fontFamily="Instrument Sans, sans-serif" fontSize="20">
         <text x="168" y="232">Tooting Broadway</text>
         <text x="300" y="270">I&amp;A, 84 Mitcham Road</text>
         <text x="214" y="178" transform="rotate(7.3 214 178)" fontSize="15" letterSpacing="2">MITCHAM ROAD</text>
