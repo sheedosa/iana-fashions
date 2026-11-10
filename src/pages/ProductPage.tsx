@@ -101,7 +101,7 @@ export function ProductPage() {
 
               <a ref={buyRef} href={`tel:${SITE.phoneIntl}`} className="btn min-h-16 flex-col gap-0.5 py-2.5">
                 <span>{action}{size ? `, size ${size}` : ""}</span>
-                <span className="small font-normal">{SITE.phone}</span>
+                <span className="font-normal">{SITE.phone}</span>
               </a>
 
               <div className="flex flex-col gap-3">
@@ -136,7 +136,7 @@ export function ProductPage() {
       <div className="buybar" data-on={barOn} inert={!barOn} aria-label="Reserve">
         <p className="min-w-0 leading-tight">
           <span className="block truncate font-medium">{p.title}, {lower}</span>
-          <span className="small">{gbp(p.price)} sample price</span>
+          <span className="block">{gbp(p.price)} sample price</span>
         </p>
         <a href={`tel:${SITE.phoneIntl}`} className="btn shrink-0 px-4">{action}</a>
       </div>

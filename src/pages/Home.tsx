@@ -97,7 +97,7 @@ export function Home() {
               </li>
             ))}
           </ul>
-          <p className="small">Sample pieces and prices.</p>
+          <p>Sample pieces and prices.</p>
           <Link to="/shop/eid" className="btn">See the Eid pieces</Link>
         </div>
       </section>

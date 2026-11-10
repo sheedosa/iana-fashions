@@ -191,6 +191,8 @@
     .ppage { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); }
     .pstack, .pstack[data-many="true"] { grid-auto-flow: row; grid-auto-columns: auto; overflow: visible; align-content: start; }
     .ppanel { padding: 0; }
+    /* A narrow panel beside the pictures: the name steps down so its longest word fits. */
+    @media (max-width: 1023px) { .ppanel h1 { font-size: 7.4vw; } }
     .ppanel-in { position: sticky; top: var(--header-h); padding: clamp(2rem, 4vw, 4rem) clamp(1.5rem, 4.5vw, 5rem) 3rem; max-width: 40rem; }
   }
 
