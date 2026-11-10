@@ -1,43 +1,43 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Seo, breadcrumbs, absolute } from "../components/Seo";
-import { ProductCard } from "../components/ProductCard";
-import { Chevron, HijabArt, PhotoSlot, Swatches } from "../components/Art";
+import { Name, PiecePicture, Tile } from "../components/Piece";
+import { Drape, PhotoSlot, Swatches, tint } from "../components/Art";
 import { pieceVT } from "../components/VLink";
 import { NotFound } from "./NotFound";
-import { img, store, type Product } from "../lib/store";
-import { RETURNS_LINE, SITE, gbp } from "../data/site";
+import { img, store, type Colour, type Product } from "../lib/store";
+import { SITE, gbp } from "../data/site";
 
-function Gallery({ p, colour }: { p: Product; colour: Product["colours"][number] }) {
-  const [active, setActive] = useState(0);
-  useEffect(() => { setActive(0); }, [p.handle]);
+/** The pictures of a piece, one under the other; the page scrolls them past the panel. On phones they swipe sideways. */
+function Stack({ p, colour }: { p: Product; colour: Colour }) {
   const vt = { viewTransitionName: pieceVT(p.handle) };
-  if (p.art) return <HijabArt art={p.art} colour={colour} className="aspect-[4/5] w-full rounded-pill md:max-h-[calc(100dvh-6.5rem)]" style={vt} />;
-  if (!p.images.length) return <div style={vt}><PhotoSlot caption={p.slot ?? p.title} className="aspect-[4/5] w-full rounded-pill md:max-h-[calc(100dvh-6.5rem)]" /></div>;
+  const drawn = !!p.art || !!store.coordArt(p);
+  const more = p.images.slice(1);
+  const many = drawn || more.length > 0;
   return (
-    <div className="flex flex-col gap-3 sm:flex-row-reverse md:flex-col lg:flex-row-reverse">
-      <div className="min-w-0 flex-1 overflow-hidden rounded-pill bg-sage" style={vt}><img src={img(p.images[active])} alt={`${p.title}${p.images.length > 1 ? `, view ${active + 1} of ${p.images.length}` : ""}`} width="1100" height="1375" className="aspect-[6/7] w-full object-cover object-top sm:aspect-[4/5] md:max-h-[calc(100dvh-6.5rem)]" /></div>
-      {p.images.length > 1 && (
-        <div className="flex gap-3 sm:flex-col md:flex-row lg:flex-col">
-          {p.images.map((im, i) => (
-            <button key={im} type="button" onClick={() => setActive(i)} aria-label={`Show view ${i + 1}`} aria-pressed={i === active} className={`h-24 w-20 overflow-hidden rounded-pill border ${i === active ? "border-ink" : "border-transparent"}`}>
-              <img src={img(im, true)} alt="" className="h-full w-full object-cover" />
-            </button>
-          ))}
+    <div className="pstack" data-many={many} tabIndex={many ? 0 : undefined} role={many ? "region" : undefined} aria-label={many ? "Pictures" : undefined}>
+      <div className={`pic ${drawn ? "r45" : "r23"}`} style={vt}>
+        <PiecePicture p={p} colour={colour} large eager alt={`${p.title}${drawn ? "" : `, photographed in ${p.colours[0].name.toLowerCase()}`}`} />
+      </div>
+      {more.map((im) => <div key={im} className="pic r45"><img src={img(im)} alt={`${p.title}, the cloth close up`} loading="lazy" /></div>)}
+      {p.art && (
+        <div className="pic r23" style={{ background: tint(colour.hex, 0.14), color: "#45353a" }}>
+          <div className="grid place-items-center p-[12%]"><Drape colour={colour} className="!h-full !max-h-none !w-auto" /></div>
         </div>
       )}
+      {store.coordArt(p) && <div className="pic r45"><PhotoSlot caption={p.slot ?? p.title} /></div>}
     </div>
   );
 }
 
-/** True while the element is on screen, or still below it (not yet scrolled past). */
+/** True while the element is on screen. */
 function useOnScreen<T extends Element>(selector?: string) {
   const ref = useRef<T>(null);
   const [on, setOn] = useState(true);
   useEffect(() => {
     const el = selector ? document.querySelector(selector) : ref.current;
     if (!el || !("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver(([e]) => setOn(e.isIntersecting || (!selector && e.boundingClientRect.top > 0)));
+    const io = new IntersectionObserver(([e]) => setOn(e.isIntersecting));
     io.observe(el);
     return () => io.disconnect();
   }, [selector]);
@@ -56,114 +56,89 @@ export function ProductPage() {
   if (!p) return <NotFound />;
 
   const colour = p.colours.find((c) => c.name === (colourName ?? params.get("colour"))) ?? p.colours[0];
+  const lower = colour.name.toLowerCase();
   const oneSize = p.sizes.length === 1;
   const pre = store.isPreorder(p);
+  const abaya = store.isAbaya(p);
   const pairs = store.pairs(p);
   const path = `/products/${p.handle}`;
   const home = p.collections.find((c) => c !== "new-in") ?? "all";
   const action = pre ? "Call to pre-order" : "Call to reserve";
-  const n = p.colours.length;
+  const photographed = !p.art && !store.coordArt(p) && p.images.length > 0;
   const barOn = !buyOn && !footerOn;
+  const d = SITE.delivery;
 
   return (
     <>
       <Seo title={p.title} path={path} type="product" image={p.images[0] ? `/img/${p.images[0]}.webp` : undefined}
-        description={`${p.title} in ${p.fabric.toLowerCase()}, in ${p.colours.length} colours. ${store.isAbaya(p) ? "Can be taken up or amended in our Tooting shop. " : ""}From I&A Fashions, Tooting.`}
+        description={`${p.title} in ${p.fabric.toLowerCase()}, in ${p.colours.length} colours. ${abaya ? "Can be taken up or amended in our Tooting shop. " : ""}From I&A Fashions, Tooting.`}
         jsonLd={[breadcrumbs([{ name: "Home", path: "/" }, { name: p.type, path: `/shop/${home}` }, { name: p.title, path }]),
           { "@context": "https://schema.org", "@type": "Product", name: p.title, description: p.details, ...(p.images.length ? { image: p.images.map((i) => absolute(`/img/${i}.webp`)) } : {}), material: p.fabric, color: p.colours.map((c) => c.name).join(", "), brand: { "@type": "Brand", name: SITE.name }, category: p.type }]} />
 
-      <div className="wrap pt-3 sm:pt-5">
-        <nav aria-label="Breadcrumb">
-          <ol className="small flex flex-wrap items-center gap-x-2 text-mute">
-            <li><Link to="/" className="link tap">Home</Link></li>
-            <li aria-hidden="true">/</li>
-            <li><Link to={`/shop/${home}`} className="link tap">{p.type}</Link></li>
-          </ol>
-        </nav>
-      </div>
+      <div className="first">
+        <section className="ppage">
+          <Stack p={p} colour={colour} />
 
-      <section className="wrap grid gap-x-8 gap-y-6 pb-16 pt-1 md:grid-cols-2 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)] lg:gap-x-16 lg:pb-24 lg:pt-3">
-        <div className="self-start md:sticky md:top-[5.25rem]"><Gallery p={p} colour={colour} /></div>
-
-        <div className="flex flex-col gap-7 lg:max-w-[32rem] lg:pt-4">
-          <div className="flex flex-col gap-2">
-            {pre && <p className="tag self-start bg-ink text-paper">Pre-order</p>}
-            <h1>{p.title}</h1>
-            <p className="voice" aria-live="polite">in {colour.name.toLowerCase()}</p>
-            <p className="pt-1 text-xl">{gbp(p.price)} <span className="text-base text-mute">sample price</span></p>
-            <p className="text-mute">{p.fabric}, {n} {n === 1 ? "colour" : "colours"}{!p.art && p.images.length > 0 && colour.name !== p.colours[0].name ? `. Photographed in ${p.colours[0].name.toLowerCase()}.` : ""}</p>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <p className="label text-mute">Colour</p>
-            <div className="-ml-1"><Swatches colours={p.colours} active={colour.name} onPick={(c) => setColourName(c.name)} size="lg" label="Colour" /></div>
-          </div>
-
-          {!oneSize && (
-            <fieldset className="flex flex-col">
-              <legend className="label mb-2.5 text-mute">Size</legend>
-              <div className="flex flex-wrap gap-2">
-                {p.sizes.map((s) => <button key={s} type="button" aria-pressed={size === s} onClick={() => setSize(s)} className="chip min-w-14 justify-center !text-base hover:bg-stone aria-pressed:hover:bg-ink">{s}</button>)}
+          <div className="ppanel">
+            <div className="ppanel-in flex flex-col gap-6">
+              <div className="flex flex-col gap-1">
+                <nav aria-label="Breadcrumb"><Link to={`/shop/${home}`} className="link tap">{p.type}</Link></nav>
+                <h1><Name>{p.title}</Name></h1>
+                <p className="colour-name pt-1" aria-live="polite">in {lower}</p>
+                <p className="pt-2 text-xl">{gbp(p.price)} <span className="text-base text-mute">sample price{pre ? ", pre-order" : ""}</span></p>
               </div>
-              {store.isAbaya(p) && (
-                <p className="pt-3.5">This abaya can be taken up or amended in our Tooting shop: hem, sleeves or sides. Try it on and we'll pin it with you. <Link to="/alterations" className="link">How alterations work</Link></p>
+
+              <div className="flex flex-col gap-1">
+                <div className="-ml-1"><Swatches colours={p.colours} active={colour.name} onPick={(c) => setColourName(c.name)} label="Colour" /></div>
+                {photographed && colour.name !== p.colours[0].name && <p className="text-mute">Photographed in {p.colours[0].name.toLowerCase()}.</p>}
+              </div>
+
+              {!oneSize && (
+                <div className="-ml-3 flex flex-wrap gap-1" role="group" aria-label="Size">
+                  {p.sizes.map((s) => <button key={s} type="button" aria-pressed={size === s} onClick={() => setSize(s)} className="size">{s}</button>)}
+                </div>
               )}
-            </fieldset>
-          )}
 
-          <div className="flex flex-col gap-2.5">
-            <a ref={buyRef} href={`tel:${SITE.phoneIntl}`} className="btn btn-ink min-h-14 flex-col gap-0.5 py-2.5">
-              <span>{action}</span>
-              <span className="small font-normal text-on-ink">{SITE.phone}</span>
-            </a>
-            <p className="text-mute">Online ordering opens at launch. This is a sample product{pre ? "; pre-order dates are to be confirmed" : ""}.</p>
-          </div>
+              <a ref={buyRef} href={`tel:${SITE.phoneIntl}`} className="btn min-h-16 flex-col gap-0.5 py-2.5">
+                <span>{action}{size ? `, size ${size}` : ""}</span>
+                <span className="small font-normal">{SITE.phone}</span>
+              </a>
 
-          <div>
-            <h2 className="label mb-2 text-mute">Delivery and collection</h2>
-            <div className="rows">
-              <p><span>{SITE.delivery.standard.label}, {SITE.delivery.standard.time}</span><span>{gbp(SITE.delivery.standard.price)}</span></p>
-              <p><span>{SITE.delivery.express.label}, {SITE.delivery.express.time}</span><span>{gbp(SITE.delivery.express.price)}</span></p>
-              <p><span>Orders of {gbp(SITE.delivery.freeOver)} and over</span><span>Free</span></p>
-              <p><span>{SITE.delivery.collect}</span></p>
+              <div className="flex flex-col gap-3">
+                {abaya && <p>This abaya can be taken up or amended in our Tooting shop: the hem, the sleeves or the sides. <Link to="/alterations" className="link">How alterations work</Link></p>}
+                <p>Delivery {gbp(d.standard.price)}, free on orders of {gbp(d.freeOver)} and over, or collect in Tooting. {SITE.returns.days}-day returns. <Link to="/delivery-returns" className="link">Delivery and returns</Link></p>
+                <p className="text-mute">Online ordering opens at launch. This is a sample product{pre ? "; pre-order dates are to be confirmed" : ""}.</p>
+              </div>
             </div>
           </div>
+        </section>
+      </div>
 
-          <div>
-            <details open className="border-b border-line">
-              <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 font-medium">Details<Chevron /></summary>
-              <p className="pb-4 text-mute">{p.details} {p.fabric}.</p>
-            </details>
-            {store.isAbaya(p) && (
-              <details className="border-b border-line">
-                <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 font-medium">Alteration prices and turnaround<Chevron /></summary>
-                <p className="pb-4 text-mute">Prices and turnaround: [ALTERATION PRICES AND TURNAROUND]. <Link to="/alterations" className="link text-ink">Alterations and bespoke</Link></p>
-              </details>
-            )}
-            <details className="border-b border-line">
-              <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-4 font-medium">Returns<Chevron /></summary>
-              <p className="pb-4 text-mute">{RETURNS_LINE} <Link to="/delivery-returns" className="link text-ink">Delivery and returns</Link></p>
-            </details>
-          </div>
+      <section className="wrap grid gap-x-16 gap-y-5 py-14 sm:py-24 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" aria-labelledby="details-h">
+        <h2 id="details-h">The details</h2>
+        <div className="prose-w flex flex-col gap-4 md:pt-3">
+          <p className="lede">{p.details}</p>
+          <p>{p.fabric}. {oneSize ? "One size." : `Sizes ${p.sizes[0]} to ${p.sizes[p.sizes.length - 1]}.`}</p>
+          {abaya && <p>Alteration prices and turnaround: [ALTERATION PRICES AND TURNAROUND].</p>}
         </div>
       </section>
 
       {pairs.length > 0 && (
-        <section className="border-t border-line" aria-labelledby="pairs-h">
-          <div className="wrap grid gap-x-12 gap-y-6 py-12 sm:py-16 lg:grid-cols-[17rem_minmax(0,1fr)]">
-            <h2 id="pairs-h">Wear it with</h2>
-            <div className="grid max-w-2xl grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-6">{pairs.map((x) => <ProductCard key={x.handle} p={x} />)}</div>
+        <section className="pb-16 sm:pb-24" aria-labelledby="pairs-h">
+          <h2 id="pairs-h" className="wrap mb-6 sm:mb-8">Wear it with</h2>
+          <div className="grid grid-cols-2 gap-x-[var(--seam)] md:grid-cols-[minmax(0,4fr)_minmax(0,4fr)_minmax(0,3fr)]">
+            {pairs.map((x, i) => <div key={x.handle} className={i === 1 ? "pt-10 md:pt-24" : ""}><Tile p={x} tall={i === 0} /></div>)}
           </div>
         </section>
       )}
 
-      {/* Phone: price and the action stay in reach once the main button has scrolled away. */}
+      {/* Phone: price and the action stay in reach whenever the main button is off screen, and step aside for the footer. */}
       <div className="buybar" data-on={barOn} inert={!barOn} aria-label="Reserve">
         <p className="min-w-0 leading-tight">
-          <span className="block truncate font-medium">{p.title}, {colour.name.toLowerCase()}</span>
-          <span className="small">{gbp(p.price)} <span className="text-mute">sample price</span></span>
+          <span className="block truncate font-medium">{p.title}, {lower}</span>
+          <span className="small">{gbp(p.price)} sample price</span>
         </p>
-        <a href={`tel:${SITE.phoneIntl}`} className="btn btn-ink shrink-0 px-4">{action}</a>
+        <a href={`tel:${SITE.phoneIntl}`} className="btn shrink-0 px-4">{action}</a>
       </div>
     </>
   );

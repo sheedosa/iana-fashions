@@ -19,7 +19,7 @@ npm run build:spa    # without prerender
 
 ## What's real and what's sample
 - **Real:** business name, address, phone, hours, company and VAT numbers, brand (I&A brand guide 2022, Fashions lockup and Light Pink). Confirmed by the client: range sizes (about 10 abayas, 20 hijab styles in 5+ colours, 10 co-ords), fabrics (cotton, jersey, polyester), £18 to £65, in-shop alterations, bespoke coming soon, pre-orders for Eid and new collections, delivery (£4.95 standard, £7.95 express, free over £100, click and collect) and 28-day returns.
-- **Sample:** every product in `src/data/catalogue.json` (names, prices, colours). Hijabs are drawn in code until photographed; products without a photo show a labelled slot. Ordering is switched off (`SITE.preview`).
+- **Sample:** every product in `src/data/catalogue.json` (names, prices, colours). Hijabs and unphotographed co-ords are drawn in code in their own colours; existing photographs are cut to cloth and garment only; a labelled slot says what is still to be shot. Ordering is switched off (`SITE.preview`).
 - Open questions for the client are in `SITE.toConfirm`.
 
 ## Going live

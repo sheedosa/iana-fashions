@@ -51,8 +51,24 @@ export const store = {
   pairs: (p: Product): Product[] => p.pairsWith.map((h) => data.products.find((x) => x.handle === h)).filter((x): x is Product => !!x),
   isPreorder: (p: Product) => p.badge === "Pre-order",
   isAbaya: (p: Product) => p.type === "Abayas",
+  /** A co-ord with no photograph yet is drawn flat in its colour; the drawing follows the product's own description. */
+  coordArt: (p: Product): { wide: boolean; trim: boolean } | null =>
+    p.type === "Co-ords" && !p.images.length ? { wide: /wide/i.test(p.details), trim: /embroider/i.test(p.details) } : null,
+  /** A colour for each drawn piece in a list, so a wall of hijabs shows the range and no two neighbours match:
+      each piece takes a colour of its own that no earlier piece has used, odd ones starting from the deeper half of their list. */
+  dealColours: (list: Product[]): Map<string, string> => {
+    const used = new Set<string>(), out = new Map<string, string>();
+    list.filter((p) => !!p.art).forEach((p, i) => {
+      const n = p.colours.length, start = i % 2 ? Math.floor(n / 2) : 0;
+      const order = p.colours.map((_, k) => p.colours[(start + k) % n]);
+      const c = order.find((x) => !used.has(x.name)) ?? order[0];
+      used.add(c.name); out.set(p.handle, c.name);
+    });
+    return out;
+  },
+  /** The fabrics a set of products comes in, in alphabetical order. */
+  fabrics: (list: Product[]): string[] => [...new Set(list.map((p) => p.fabric))].sort(),
 };
 
 export const img = (path: string, small = false) => `${import.meta.env.BASE_URL}img/${path}${small ? "-sm" : ""}.webp`;
-export const hasSmall = (path: string) => !path.startsWith("hero/");
-export const cardImg = (path: string) => img(path, hasSmall(path));
+export const cardImg = (path: string) => img(path, true);
