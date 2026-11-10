@@ -12,13 +12,13 @@ function Gallery({ p, colour }: { p: Product; colour: Product["colours"][number]
   const [active, setActive] = useState(0);
   useEffect(() => { setActive(0); }, [p.handle]);
   const vt = { viewTransitionName: pieceVT(p.handle) };
-  if (p.art) return <HijabArt art={p.art} colour={colour} className="aspect-[4/5] w-full rounded-pill lg:max-h-[calc(100dvh-6.5rem)]" style={vt} />;
-  if (!p.images.length) return <div style={vt}><PhotoSlot caption={p.slot ?? p.title} className="aspect-[4/5] w-full rounded-pill lg:max-h-[calc(100dvh-6.5rem)]" /></div>;
+  if (p.art) return <HijabArt art={p.art} colour={colour} className="aspect-[4/5] w-full rounded-pill md:max-h-[calc(100dvh-6.5rem)]" style={vt} />;
+  if (!p.images.length) return <div style={vt}><PhotoSlot caption={p.slot ?? p.title} className="aspect-[4/5] w-full rounded-pill md:max-h-[calc(100dvh-6.5rem)]" /></div>;
   return (
-    <div className="flex flex-col gap-3 sm:flex-row-reverse">
-      <div className="min-w-0 flex-1 overflow-hidden rounded-pill bg-sage" style={vt}><img src={img(p.images[active])} alt={`${p.title}${p.images.length > 1 ? `, view ${active + 1} of ${p.images.length}` : ""}`} width="1100" height="1375" className="aspect-[4/5] w-full object-cover lg:max-h-[calc(100dvh-6.5rem)]" /></div>
+    <div className="flex flex-col gap-3 sm:flex-row-reverse md:flex-col lg:flex-row-reverse">
+      <div className="min-w-0 flex-1 overflow-hidden rounded-pill bg-sage" style={vt}><img src={img(p.images[active])} alt={`${p.title}${p.images.length > 1 ? `, view ${active + 1} of ${p.images.length}` : ""}`} width="1100" height="1375" className="aspect-[6/7] w-full object-cover object-top sm:aspect-[4/5] md:max-h-[calc(100dvh-6.5rem)]" /></div>
       {p.images.length > 1 && (
-        <div className="flex gap-3 sm:flex-col">
+        <div className="flex gap-3 sm:flex-col md:flex-row lg:flex-col">
           {p.images.map((im, i) => (
             <button key={im} type="button" onClick={() => setActive(i)} aria-label={`Show view ${i + 1}`} aria-pressed={i === active} className={`h-24 w-20 overflow-hidden rounded-pill border ${i === active ? "border-ink" : "border-transparent"}`}>
               <img src={img(im, true)} alt="" className="h-full w-full object-cover" />
@@ -82,8 +82,8 @@ export function ProductPage() {
         </nav>
       </div>
 
-      <section className="wrap grid gap-x-16 gap-y-6 pb-16 pt-1 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)] lg:pb-24 lg:pt-3">
-        <div className="self-start lg:sticky lg:top-[5.25rem]"><Gallery p={p} colour={colour} /></div>
+      <section className="wrap grid gap-x-8 gap-y-6 pb-16 pt-1 md:grid-cols-2 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,1fr)] lg:gap-x-16 lg:pb-24 lg:pt-3">
+        <div className="self-start md:sticky md:top-[5.25rem]"><Gallery p={p} colour={colour} /></div>
 
         <div className="flex flex-col gap-7 lg:max-w-[32rem] lg:pt-4">
           <div className="flex flex-col gap-2">

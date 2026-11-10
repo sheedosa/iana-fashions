@@ -27,7 +27,15 @@ export function Header() {
   useEffect(() => {
     if (!open) return;
     setTop(bar.current?.getBoundingClientRect().bottom ?? 98);
-    const key = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { setOpen(false); bar.current?.querySelector<HTMLElement>("button[aria-controls]")?.focus(); return; }
+      if (e.key !== "Tab" || !bar.current) return;
+      // Keep Tab inside the header and its open panel.
+      const stops = [...bar.current.querySelectorAll<HTMLElement>("a[href], button")].filter((el) => el.offsetParent !== null);
+      const first = stops[0], last = stops[stops.length - 1], at = document.activeElement;
+      if (e.shiftKey && (at === first || !bar.current.contains(at))) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && (at === last || !bar.current.contains(at))) { e.preventDefault(); first.focus(); }
+    };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", key);
     return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", key); };
@@ -51,11 +59,11 @@ export function Header() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">{open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}</svg>
           </button>
           <Link to="/" className="inline-flex min-h-11 shrink-0 items-center"><Logo className="h-6 w-auto sm:h-8" /></Link>
-          <nav aria-label="Main" className="hidden gap-x-5 text-[15px] lg:flex xl:gap-x-7">
+          <nav aria-label="Main" className="hidden gap-x-5 lg:flex xl:gap-x-7">
             {NAV.map((n) => <NavLink key={n.to} to={n.to} className={({ isActive }) => `inline-flex min-h-11 min-w-11 items-center justify-center whitespace-nowrap border-b ${isActive ? "border-ink" : "border-transparent hover:border-ink/40"}`}>{n.label}</NavLink>)}
           </nav>
           <div className="-mr-2 flex items-center">
-            <Link to="/visit" className="hidden min-h-11 items-center whitespace-nowrap px-2 text-[15px] sm:inline-flex">Visit the shop</Link>
+            <Link to="/visit" className="hidden min-h-11 items-center whitespace-nowrap px-2 sm:inline-flex">Visit the shop</Link>
             <Link to="/shop/all" className="link inline-flex min-h-11 items-center px-2 sm:hidden">Shop</Link>
           </div>
         </div>
